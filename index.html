@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>天富綜合交通監測屏 - 校園版</title>
+    <title>HTMSTSW</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;700;900&family=Playfair+Display:wght@700&display=swap');
 
@@ -227,7 +227,7 @@
     // 文匯報抓取
     async function fetchWWP() {
         try {
-            const res = await fetch("https://www.wenweipo.com/todaywenwei");
+            const res = await fetch("https://corsproxy.io/?https://www.wenweipo.com/todaywenwei");
             const html = await res.text();
             const doc = new DOMParser().parseFromString(html, "text/html");
             const today = new Date().getFullYear().toString();
@@ -241,7 +241,7 @@
   async function fetchChinaDaily() {
     try {
         // 1. 在背景抓取資料，這期間 UI 保持不變（顯示舊新聞）
-        const res = await fetch("https://www.chinadaily.com.cn/latestnews210");
+        const res = await fetch("https://corsproxy.io/?https://www.chinadaily.com.cn/latestnews210");
         const html = await res.text();
         const doc = new DOMParser().parseFromString(html, "text/html");
         const today = new Date().getFullYear().toString();
