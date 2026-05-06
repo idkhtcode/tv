@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>HTMSTSW</title>
+    <title>HTMS(TSW)</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;700;900&family=Playfair+Display:wght@700&display=swap');
 
@@ -11,6 +11,7 @@
             --mrt-blue: #005696;
             --mrt-red: #d11f2a;
             --mrt-green: #007a33;
+            --gmb-green: #00813c; /* 小巴專用綠色 */
             --china-daily-blue: #003366;
             --card-bg: rgba(255, 255, 255, 0.95);
         }
@@ -48,6 +49,7 @@
         .header-kmb { background: var(--mrt-red); }
         .header-mtrb { background: var(--mrt-blue); margin-top: 5px; }
         .header-lrt { background: var(--mrt-green); margin-top: 5px; }
+        .header-gmb { background: var(--gmb-green); margin-top: 5px; }
 
         .arrival-list { flex-grow: 1;
     display: flex;         /* 使用 Flexbox */
@@ -92,6 +94,11 @@
         margin-top: 50px;
         }
 
+        #gmb-list {
+    flex-grow: 0; /* 不主動伸展 */
+    min-height: auto; 
+}
+
         .news-label {
             font-size: 2.0vw; font-weight: 900; margin-bottom: 10px;
             padding: 4px 12px; display: inline-block; border-radius: 4px;
@@ -129,6 +136,8 @@
         <div id="kmb-list" class="arrival-list"></div>
         <div class="section-header header-mtrb">MTR Bus - K76</div>
         <div id="mtrb-list"></div>
+        <div class="section-header header-gmb">GMB 小巴 - 618</div>
+<div id="gmb-list" class="arrival-list"></div>
         <div class="section-header header-lrt">LRT 輕鐵 - 天富站</div>
         <div id="lrt-list" class="arrival-list"></div>
     </div>
@@ -136,6 +145,7 @@
     <div class="main-panel">
         <div class="top-clock-area">
             <div>
+                <div style="font-size: 4.0vw;">天水圍香島中學</div>
                 <div id="date">2026年5月6日 星期三</div>
                 <!-- <div style="font-size: 0.9vw; color: #666;">TIN FU CAMPUS INFORMATION SYSTEM</div> -->
             </div>
@@ -163,6 +173,9 @@
     // 交通數據配置
     const KMB_STOP_ID = "8D56DB404D264D5A";
     const LRT_STATION_ID = 480;
+    const GMB_ROUTE_ID = "2007438"; // 618
+const GMB_ROUTE_SEQ = 1;      // 天恩 -> 深圳灣
+const GMB_STOP_SEQ = 1;       // 天恩商場
     const mockData = [
     { route: "265B", dest_tc: "旺角(柏景灣)", eta: new Date(Date.now() + 500000).toISOString(), dir: "O", service_type: 1 },
     { route: "265M", dest_tc: "麗瑤", eta: new Date(Date.now() + 300000).toISOString(), dir: "O", service_type: 1 },
@@ -173,6 +186,35 @@
     { route: "269C", dest_tc: "觀塘碼頭", eta: new Date(Date.now() + 1200000).toISOString(), dir: "O", service_type: 1 },
     { route: "967", dest_tc: "金鐘", eta: new Date(Date.now() + 400000).toISOString(), dir: "O", service_type: 1 }
 ];
+    // 新增小巴抓取函數
+async function fetchGMB() {
+    try {
+        const res = await fetch(`https://data.etagmb.gov.hk/eta/route-stop/${GMB_ROUTE_ID}/${GMB_ROUTE_SEQ}/${GMB_STOP_SEQ}`);
+        const json = await res.json();
+        const etas = json.data?.eta || [];
+        
+        let html = "";
+        if (etas.length === 0) {
+            html = `<div class="arrival-row"><div class="route-dest" style="width:100%">暫無班次資料</div></div>`;
+        } else {
+            // 顯示前 2 班以節省空間
+            etas.slice(0, 1).forEach(eta => {
+                let timeText = eta.diff === 0 ? "即將開車" : `${eta.diff}分`;
+                if (eta.diff === null || eta.diff === undefined) timeText = "預報中";
+                
+                html += `
+                    <div class="arrival-row">
+                        <div class="route-id" style="color:var(--gmb-green)">618</div>
+                        <div class="route-dest">往 深圳灣口岸</div>
+                        <div class="eta-box">${timeText}</div>
+                    </div>`;
+            });
+        }
+        document.getElementById('gmb-list').innerHTML = html;
+    } catch (e) {
+        console.error("GMB Error:", e);
+    }
+}
 
     async function fetchTraffic() {
         // 九巴
@@ -193,6 +235,8 @@
                 <div class="arrival-row"><div class="route-id">${r.route}</div><div class="route-dest">往 ${r.dest}</div><div class="eta-box">${r.etas[0]}分</div></div>
             `).join('');
         } catch(e) {}
+
+        fetchGMB(); // 呼叫小巴更新
 
         // K76
         try {
@@ -223,6 +267,7 @@
             document.getElementById('lrt-list').innerHTML = html;
         } catch(e) {}
     }
+
 
     // 文匯報抓取
     async function fetchWWP() {
