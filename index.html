@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>天富綜合交通監測屏 - 校園版</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;700;900&family=Playfair+Display:wght@700&display=swap');
+
+        :root {
+            --mrt-blue: #005696;
+            --mrt-red: #d11f2a;
+            --mrt-green: #007a33;
+            --china-daily-blue: #003366;
+            --card-bg: rgba(255, 255, 255, 0.95);
+        }
+
+        body {
+            margin: 0; padding: 10px;
+            font-family: 'Noto Sans TC', sans-serif;
+            background: #1a1a1a;
+            height: 100vh;
+            display: flex; justify-content: center; align-items: center;
+            overflow: hidden;
+        }
+
+        .display-screen {
+            width: 98vw; height: 55vw; 
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            display: flex; border: 4px solid #333; border-radius: 4px;
+            box-shadow: 0 0 30px rgba(0,0,0,0.5);
+        }
+
+        /* 左側交通欄位 */
+        .info-sidebar {
+            width: 30%;
+            background: rgba(0, 0, 0, 0.3);
+            border-right: 2px solid #444;
+            display: flex; flex-direction: column;
+        }
+
+        .section-header {
+            padding: 8px 12px;
+            font-size: 1.1vw;
+            font-weight: 700;
+            color: white;
+        }
+        .header-kmb { background: var(--mrt-red); }
+        .header-mtrb { background: var(--mrt-blue); margin-top: 5px; }
+        .header-lrt { background: var(--mrt-green); margin-top: 5px; }
+
+        .arrival-list { flex-grow: 1;
+    display: flex;         /* 使用 Flexbox */
+    flex-direction: column; /* 垂直排列 */
+    justify-content: space-between; /* 均勻分配剩餘空間，消除底部空白 */
+    overflow: hidden;}
+
+        .arrival-row {
+           flex-grow: 1;          /* 讓每一行自動長高去填補空白 */
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 5px 12px;
+    background: var(--card-bg);
+    margin-bottom: 1px;    /* 保持細微間隔 */
+        }
+
+        .route-id { font-size: 1.2vw; font-weight: 900; width: 25%; color: #000; }
+        .route-dest { font-size: 0.85vw; color: #333; width: 50%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .eta-box { width: 25%; text-align: right; font-weight: 700; color: var(--mrt-blue); font-size: 1.2vw; }
+
+        /* 右側資訊面板 */
+        .main-panel {
+            width: 70%; padding: 2vw;
+            display: flex; flex-direction: column;
+            color: white;
+        }
+
+        .top-clock-area {
+            display: flex; justify-content: space-between; align-items: flex-end;
+            border-bottom: 2px solid rgba(255,255,255,0.1);
+            padding-bottom: 10px; margin-bottom: 20px;
+        }
+
+        #clock { font-size: 6vw; font-weight: 900; line-height: 1; font-family: 'Arial'; }
+        #date { font-size: 1.8vw; color: #ccc; }
+
+        /* 新聞板塊設計 */
+        .news-block {
+            margin-bottom: 25px;
+            animation: fadeIn 1s ease-in;
+        margin-top: 50px;
+        }
+
+        .news-label {
+            font-size: 2.0vw; font-weight: 900; margin-bottom: 10px;
+            padding: 4px 12px; display: inline-block; border-radius: 4px;
+        }
+
+        .label-wwp { background: var(--mrt-red); }
+        .label-cd { background: var(--china-daily-blue); }
+
+        .headline-text {
+            font-size: 3.5vw; font-weight: 700; line-height: 1.4;
+            color: #fff; margin-left: 5px;
+            display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+        }
+
+        .headline-text.english {
+            font-family: 'Playfair Display', serif;
+            font-size: 3.5vw;
+            border-left: 4px solid var(--china-daily-blue);
+            padding-left: 15px;
+        }
+
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+        .footer-tag {
+            margin-top: auto; font-size: 0.9vw; color: #2ecc71;
+            display: flex; justify-content: space-between;
+        }
+    </style>
+</head>
+<body>
+
+<div class="display-screen">
+    <div class="info-sidebar">
+        <div class="section-header header-kmb">KMB 九巴 - 天富苑</div>
+        <div id="kmb-list" class="arrival-list"></div>
+        <div class="section-header header-mtrb">MTR Bus - K76</div>
+        <div id="mtrb-list"></div>
+        <div class="section-header header-lrt">LRT 輕鐵 - 天富站</div>
+        <div id="lrt-list" class="arrival-list"></div>
+    </div>
+
+    <div class="main-panel">
+        <div class="top-clock-area">
+            <div>
+                <div id="date">2026年5月6日 星期三</div>
+                <!-- <div style="font-size: 0.9vw; color: #666;">TIN FU CAMPUS INFORMATION SYSTEM</div> -->
+            </div>
+            <div id="clock">00:00:00</div>
+        </div>
+
+        <div class="news-block">
+            <div class="news-label label-wwp">文匯報 | 今日要聞</div>
+            <div id="wwp-headline" class="headline-text">正在加載中文頭條...</div>
+        </div>
+
+        <div class="news-block">
+            <div class="news-label label-cd">CHINA DAILY | LATEST</div>
+            <div id="cd-headline" class="headline-text english">Loading latest international news...</div>
+        </div>
+
+        <div class="footer-tag">
+            <!-- <span>● 實時交通及新聞監控已啟動</span>
+            <span id="update-time">最後更新: --:--:--</span> -->
+        </div>
+    </div>
+</div>
+
+<script>
+    // 交通數據配置
+    const KMB_STOP_ID = "8D56DB404D264D5A";
+    const LRT_STATION_ID = 480;
+    const mockData = [
+    { route: "265B", dest_tc: "旺角(柏景灣)", eta: new Date(Date.now() + 500000).toISOString(), dir: "O", service_type: 1 },
+    { route: "265M", dest_tc: "麗瑤", eta: new Date(Date.now() + 300000).toISOString(), dir: "O", service_type: 1 },
+    { route: "269M", dest_tc: "祖堯", eta: new Date(Date.now() + 800000).toISOString(), dir: "O", service_type: 1 },
+    { route: "276B", dest_tc: "上水", eta: new Date(Date.now() + 200000).toISOString(), dir: "O", service_type: 1 },
+    { route: "69M", dest_tc: "葵芳站", eta: new Date(Date.now() + 600000).toISOString(), dir: "O", service_type: 1 },
+    { route: "269P", dest_tc: "葵涌", eta: new Date(Date.now() + 1000000).toISOString(), dir: "O", service_type: 1 },
+    { route: "269C", dest_tc: "觀塘碼頭", eta: new Date(Date.now() + 1200000).toISOString(), dir: "O", service_type: 1 },
+    { route: "967", dest_tc: "金鐘", eta: new Date(Date.now() + 400000).toISOString(), dir: "O", service_type: 1 }
+];
+
+    async function fetchTraffic() {
+        // 九巴
+        try {
+            const res = await fetch(`https://data.etabus.gov.hk/v1/transport/kmb/stop-eta/${KMB_STOP_ID}`);
+            const json = await res.json();
+            const routes = {};
+            console.log(json)
+            // json.data = json.data.concat(mockData);
+            json.data.forEach(item => {
+                if (item.dir === "O" && item.eta && ![2, 3].includes(item.service_type)) {
+                    const key = `${item.route}-${item.service_type}`;
+                    if (!routes[key]) routes[key] = { route: item.route, dest: item.dest_tc, etas: [] };
+                    routes[key].etas.push(Math.max(0, Math.floor((new Date(item.eta) - new Date()) / 60000)));
+                }
+            });
+            document.getElementById('kmb-list').innerHTML = Object.values(routes).slice(0, 7).map(r => `
+                <div class="arrival-row"><div class="route-id">${r.route}</div><div class="route-dest">往 ${r.dest}</div><div class="eta-box">${r.etas[0]}分</div></div>
+            `).join('');
+        } catch(e) {}
+
+        // K76
+        try {
+            const res = await fetch("https://rt.data.gov.hk/v1/transport/mtr/bus/getSchedule", {
+                method: 'POST', headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ language: "zh", routeName: "K76" })
+            });
+            const data = await res.json();
+            const stop = data.busStop.find(s => s.busStopId === "K76-U030");
+            if (stop && stop.bus[0]) {
+                document.getElementById('mtrb-list').innerHTML = `
+                    <div class="arrival-row"><div class="route-id" style="color:var(--mrt-blue)">K76</div><div class="route-dest">往 天水圍站</div><div class="eta-box">${stop.bus[0].departureTimeText}</div></div>
+                `;
+            }
+        } catch(e) {}
+
+        // 輕鐵 (3 班次限制)
+        try {
+            const res = await fetch(`https://rt.data.gov.hk/v1/transport/mtr/lrt/getSchedule?station_id=${LRT_STATION_ID}`);
+            const data = await res.json();
+            let html = "";
+            data.platform_list.filter(p => [1,2].includes(p.platform_id)).forEach(p => {
+                p.route_list.slice(0, 3).forEach(r => {
+                    const time = r.time_ch === "即將到站" ? "即將" : r.time_ch.replace(' 分鐘', '');
+                    html += `<div class="arrival-row"><div class="route-id">${r.route_no}</div><div class="route-dest">月台 ${p.platform_id} ${r.dest_ch}</div><div class="eta-box">${time}${isNaN(time)?'':'分'}</div></div>`;
+                });
+            });
+            document.getElementById('lrt-list').innerHTML = html;
+        } catch(e) {}
+    }
+
+    // 文匯報抓取
+    async function fetchWWP() {
+        try {
+            const res = await fetch("https://www.wenweipo.com/todaywenwei");
+            const html = await res.text();
+            const doc = new DOMParser().parseFromString(html, "text/html");
+            const today = new Date().getFullYear().toString();
+            const links = Array.from(doc.querySelectorAll('a'));
+            const headline = links.find(a => a.href.includes('/a/' + today) && a.textContent.trim().length > 15);
+            if (headline) document.getElementById('wwp-headline').innerText = headline.textContent.trim();
+        } catch (e) { console.error("WWP Error"); }
+    }
+
+    // China Daily 抓取 (與 Python 邏輯對應)
+  async function fetchChinaDaily() {
+    try {
+        // 1. 在背景抓取資料，這期間 UI 保持不變（顯示舊新聞）
+        const res = await fetch("https://www.chinadaily.com.cn/latestnews210");
+        const html = await res.text();
+        const doc = new DOMParser().parseFromString(html, "text/html");
+        const today = new Date().getFullYear().toString();
+        
+        // 2. 尋找符合格式的標題
+        const links = Array.from(doc.querySelectorAll('a'));
+        const headline = links.find(a => 
+            a.href.includes('/a/' + today) && 
+            a.textContent.trim().split(' ').length > 5
+        );
+        
+        // 3. 只有當成功找到 headline 時，才替換掉原本的文字
+        // 如果沒找到或網絡超時，這裡什麼都不會發生，畫面上會繼續顯示上一小時的新聞
+        if (headline) {
+            const newTitle = headline.textContent.trim();
+            const element = document.getElementById('cd-headline');
+            
+            // 可選：只有當新標題跟舊標題不一樣時才更新，減少閃爍
+            if (element.innerText !== newTitle) {
+                element.innerText = newTitle;
+            }
+        }
+    } catch (e) { 
+        // 發生錯誤（如斷網）時，保持安靜，不更新 UI
+        console.error("China Daily Fetch Error, keeping old content."); 
+    }
+}
+
+    function updateTime() {
+        const now = new Date();
+        document.getElementById('clock').innerText = now.toLocaleTimeString('zh-HK', { hour12: false });
+        document.getElementById('date').innerText = now.toLocaleDateString('zh-HK', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' });
+        // document.getElementById('update-time').innerText = `最後更新: ${now.getHours()}:${now.getMinutes().toString().padStart(2, '0')}`;
+    }
+
+    // 1. 初始化函數：頁面開啟時立刻執行一次，獲取所有第一手數據
+async function init() {
+    updateTime();      // 顯示時間
+    fetchTraffic();    // 獲取交通 (KMB, K76, LRT)
+    fetchWWP();        // 獲取文匯報
+    fetchChinaDaily(); // 獲取 China Daily
+}
+
+// 2. 啟動初始化
+init();
+
+// 3. 設置各司其職的計時器
+// 交通數據更新頻率高 (30秒)
+setInterval(fetchTraffic, 30000); 
+
+// 新聞數據更新頻率低 (1小時 = 3600000毫秒)
+// 由於新聞函數內部已改為「獲取成功後才替換文字」，
+// 所以更新時畫面上不會出現 "Updating..."，會直接無縫切換。
+setInterval(fetchWWP, 3600000);
+setInterval(fetchChinaDaily, 3600000);
+
+// 時間顯示最快 (1秒)
+setInterval(updateTime, 1000);
+</script>
+
+</body>
+</html>
